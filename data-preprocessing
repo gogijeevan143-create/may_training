@@ -1,0 +1,191 @@
+[Cell 1] Setup & Task 1: NumPy Operations
+Code:
+
+Python
+import pandas as pd
+import numpy as np
+
+# Load the dataset
+df = pd.read_csv('student_scores.csv')
+
+# --- Part 1: NumPy Operations ---
+
+# Extract math scores, drop NaNs, and convert to NumPy array
+math_scores_raw = df['math_score'].dropna().values
+
+# Calculate statistics
+mean_score = np.mean(math_scores_raw)
+median_score = np.median(math_scores_raw)
+max_score = np.max(math_scores_raw)
+min_score = np.min(math_scores_raw)
+
+print(f"--- NumPy Statistics ---")
+print(f"Mean: {mean_score:.2f}")
+print(f"Median: {median_score}")
+print(f"Max: {max_score}")
+print(f"Min: {min_score}\n")
+
+# Normalize using Min-Max formula
+normalized_scores = (math_scores_raw - min_score) / (max_score - min_score)
+
+print(f"--- First 5 Normalized Scores ---")
+print(normalized_scores[:5])
+Output:
+
+Plaintext
+--- NumPy Statistics ---
+Mean: 88.58
+Median: 72.0
+Max: 150.0
+Min: 55.0
+
+--- First 5 Normalized Scores ---
+[1.         1.         0.         0.34736842 1.        ]
+[Cell 2] Task 2: Pandas Exploration
+Code:
+
+Python
+# --- Part 2: Pandas Exploration ---
+
+print("--- First 5 Rows ---")
+print(df.head(), "\n")
+
+print("--- Data Types ---")
+print(df.dtypes, "\n")
+
+print("--- Missing Values Count ---")
+print(df.isnull().sum(), "\n")
+
+# Find students with attendance below 70%
+low_attendance = df[df['attendance'] < 70]
+print("--- Students with Attendance < 70% ---")
+print(low_attendance[['name', 'attendance']])
+Output:
+
+Plaintext
+--- First 5 Rows ---
+   student_id      name     age  gender  math_score  science_score  attendance     exam_date
+0           1    Teresa     NaN  Female         NaN            NaN         NaN           NaN
+1           2     Amber      20  Female         NaN           70.0        65.0           NaN
+2           3    Sherri      18  Female       150.0           70.0        65.0  March 5 2024
+3           4  Brittany  twenty    Male       150.0            NaN        90.0           NaN
+4           5    Daniel      18  Female         NaN          999.0        72.0    2024-03-12 
+
+--- Data Types ---
+student_id         int64
+name              object
+age               object
+gender            object
+math_score       float64
+science_score    float64
+attendance       float64
+exam_date         object
+dtype: object 
+
+--- Missing Values Count ---
+student_id       0
+name             0
+age              6
+gender           5
+math_score       5
+science_score    5
+attendance      10
+exam_date        8
+dtype: int64 
+
+--- Students with Attendance < 70% ---
+         name  attendance
+1       Amber        65.0
+2      Sherri        65.0
+5   Frederick        65.0
+11       Luis        65.0
+20      Amber        65.0
+22     Ronald        65.0
+28  Elizabeth        65.0
+30  Frederick        65.0 
+[Cell 3] Task 3: Data Preprocessing
+Code:
+
+Python
+# --- Part 3: Data Preprocessing ---
+
+# 1. Convert incorrect data formats (string 'twenty' to int 20)
+df['age'] = df['age'].replace('twenty', 20)
+df['age'] = pd.to_numeric(df['age'])
+
+# 2. Detect and handle outliers (cap scores at 100, set invalid to NaN)
+df.loc[df['math_score'] > 100, 'math_score'] = np.nan
+df.loc[df['science_score'] > 100, 'science_score'] = np.nan
+
+# 3. Identify and handle missing values (Impute with Median and Mode)
+df['math_score'] = df['math_score'].fillna(df['math_score'].median())
+df['science_score'] = df['science_score'].fillna(df['science_score'].median())
+df['attendance'] = df['attendance'].fillna(df['attendance'].median())
+df['age'] = df['age'].fillna(df['age'].median())
+df['gender'] = df['gender'].fillna(df['gender'].mode()[0])
+
+# 4. Convert exam_date into datetime format (handling mixed formats)
+df['exam_date'] = pd.to_datetime(df['exam_date'], format='mixed')
+df['exam_date'] = df['exam_date'].fillna(df['exam_date'].mode()[0])
+
+# 5. Find and remove duplicate rows
+df = df.drop_duplicates()
+
+print("Data cleaning successfully completed.")
+print(f"Remaining null values:\n{df.isnull().sum()}")
+Output:
+
+Plaintext
+Data cleaning successfully completed.
+Remaining null values:
+student_id       0
+name             0
+age              0
+gender           0
+math_score       0
+science_score    0
+attendance       0
+exam_date        0
+dtype: int64
+[Cell 4] Task 4: Data Analysis
+Code:
+
+Python
+# --- Part 4: Data Analysis ---
+
+# 1. Create a new column named average_score
+df['average_score'] = (df['math_score'] + df['science_score']) / 2
+
+# 2. Find the top 5 students based on average_score
+top_5_students = df.nlargest(5, 'average_score')
+print("--- Top 5 Students by Average Score ---")
+print(top_5_students[['name', 'average_score']], "\n")
+
+# 3. Calculate the correlation between attendance and marks
+correlation = df['attendance'].corr(df['average_score'])
+print(f"--- Correlation between Attendance and Marks ---")
+print(f"Correlation coefficient: {correlation:.4f}\n")
+
+# 4. Group students by gender and calculate average marks
+gender_analysis = df.groupby('gender')[['math_score', 'science_score', 'average_score']].mean()
+print("--- Average Marks by Gender ---")
+print(gender_analysis)
+Output:
+
+Plaintext
+--- Top 5 Students by Average Score ---
+        name  average_score
+18  Jennifer           91.5
+12    Angela           88.0
+24   Douglas           88.0
+26  Kimberly           83.5
+15  Kathleen           81.0 
+
+--- Correlation between Attendance and Marks ---
+Correlation coefficient: 0.3245 
+
+--- Average Marks by Gender ---
+        math_score  science_score  average_score
+gender                                          
+Female   73.450000      81.250000      77.350000
+Male     71.125000      82.125000      76.625000
